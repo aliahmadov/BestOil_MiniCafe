@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Guna.UI2.WinForms;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,12 +17,16 @@ namespace BestOil_MiniCafe
         Oil selectedOil = new Oil();
         List<Food> foodList = new List<Food>();
         double sumFood = 0;
+        double sumOil = 0;
         public Form1()
         {
             InitializeComponent();
             usdTxtb.Enabled = false;
             litresTxtb.Enabled = false;
-
+            maskedTextBox1.Enabled = false;
+            maskedTextBox2.Enabled = false;
+            maskedTextBox3.Enabled = false;
+            maskedTextBox5.Enabled = false;
             Oil oil = new Oil()
             {
                 Name = "AI-92",
@@ -61,37 +66,37 @@ namespace BestOil_MiniCafe
                 Price = 3.5
             };
             foodList.Add(potato);
-            guna2HtmlLabel4.Text = potato.Price.ToString();
             foodList.Add(cocaCola);
-            guna2HtmlLabel3.Text = cocaCola.Price.ToString();
             foodList.Add(pizza);
-            guna2HtmlLabel2.Text = pizza.Price.ToString();
             foodList.Add(hotDog);
-            guna2HtmlLabel1.Text = hotDog.Price.ToString();
             oils.Add(oil3);
             oils.Add(oil2);
             oils.Add(oil);
+
             int index = 0;
             foreach (var item in groupBox1.Controls)
             {
-                if (item is CheckBox cB)
+                if (item is GroupBox gB)
                 {
-                    cB.Text = foodList[index].Name;
-                    index++;
-                }
-                else if (item is MaskedTextBox mB)
-                {
-                    mB.Enabled = false;
+                    foreach (var item2 in gB.Controls)
+                    {
+                        if (item2 is CheckBox cB)
+                        {
+                            cB.Text = foodList[index].Name;
+                            foreach (var item3 in cB.Parent.Controls)
+                            {
+                                if (item3 is Guna2HtmlLabel lB)
+                                {
+                                    lB.Text = foodList[index].Price.ToString();
+                                    index++;
+                                }
+                            }
+                        }
+                    }
                 }
             }
-
             comboBox1.DataSource = oils;
 
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
 
         }
 
@@ -114,9 +119,6 @@ namespace BestOil_MiniCafe
         {
             usdTxtb.Enabled = false;
             litresTxtb.Enabled = true;
-
-
-
         }
 
         private void litresTxtb_TextChanged(object sender, EventArgs e)
@@ -159,70 +161,121 @@ namespace BestOil_MiniCafe
 
         private void hotDogCb_CheckedChanged(object sender, EventArgs e)
         {
-            if (hotDogCb.Checked)
-                maskedTextBox1.Enabled = true;
-            else maskedTextBox1.Enabled = false;
+            foreach (var item in groupBox1.Controls)
+            {
+                if (item is GroupBox gB)
+                {
+                    foreach (var item2 in gB.Controls)
+                    {
+                        if (item2 is CheckBox cB)
+                        {
+                            if (cB.Checked)
+                            {
+                                foreach (var item3 in cB.Parent.Controls)
+                                {
+                                    if (item3 is MaskedTextBox mB)
+                                    {
+                                        mB.Enabled = true;
+                                        HelperCalculator();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var item3 in cB.Parent.Controls)
+                                {
+                                    if (item3 is MaskedTextBox mB)
+                                    {
+                                        mB.Enabled = false;
+                                        mB.Clear();
+                                        HelperCalculator();
+                                    }
+                                    else if (item3 is Label lB)
+                                    {
+                                        lB.ForeColor = Color.Red;
+                                        lB.Text = "0$";
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        private void HelperCalculator()
         {
-            if (checkBox1.Checked)
-                maskedTextBox2.Enabled = true;
-            else maskedTextBox2.Enabled = false;
-        }
+            sumFood = 0;
+            foreach (var item in groupBox1.Controls)
+            {
+                if (item is GroupBox gB)
+                {
+                    foreach (var item2 in gB.Controls)
+                    {
+                        if (item2 is Label lB)
+                        {
+                            if (lB.Text != "")
+                            {
 
-        private void checkBox2_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox2.Checked)
-                maskedTextBox3.Enabled = true;
-            else maskedTextBox3.Enabled = false;
-        }
+                                sumFood += double.Parse(lB.Text.Split('$')[0]);
+                                sumFoodLbl.Text = sumFood.ToString() + "$";
+                            }
+                        }
+                    }
+                }
 
-        private void checkBox3_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox3.Checked)
-                maskedTextBox4.Enabled = true;
-            else maskedTextBox4.Enabled = false;
-        }
-
-        private void maskedTextBox1_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
-        {
-
+            }
         }
 
         private void maskedTextBox1_TextChanged(object sender, EventArgs e)
         {
             var maskedBox = sender as MaskedTextBox;
-
-            bool hasParsed = double.TryParse(maskedBox.Text, out double parsed);
-
-            if (hasParsed)
+            int amount = 0;
+            if (maskedBox.Text != "")
             {
-                sumFood = parsed * double.Parse(guna2HtmlLabel1.Text);
-                sumFoodLbl.Text = sumFood.ToString() + "$";
+                amount = int.Parse(maskedBox.Text);
             }
-            else
+
+            double price = 0;
+            foreach (var item in maskedBox.Parent.Controls)
             {
-                sumFoodLbl.Text = "";
-                sumFood = 0;
+                if (item is Guna2HtmlLabel gB)
+                {
+                    if (gB.Text != "")
+                    {
+                        price = double.Parse(gB.Text);
+                    }
+                }
             }
+            var sumPrice = amount * price;
+
+            foreach (var item in maskedBox.Parent.Controls)
+            {
+                if (item is Label lB)
+                {
+                    lB.ForeColor = Color.Red;
+                    lB.Text = sumPrice.ToString() + "$";
+                }
+            }
+
+            HelperCalculator();
         }
 
-        private void maskedTextBox2_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
+        private void guna2CircleButton1_Click(object sender, EventArgs e)
         {
-            var maskedBox = sender as MaskedTextBox;
+            sumOil = double.Parse(oilPriceLbl.Text.Split('$')[0]);
+            var total_price = sumOil + sumFood;
 
-            bool hasParsed = double.TryParse(maskedBox.Text, out double parsed);
-
-            if (hasParsed)
+            foreach (var item in guna2GroupBox2.Controls)
             {
-                sumFood += parsed * double.Parse(guna2HtmlLabel2.Text);
-                sumFoodLbl.Text = sumFood.ToString() + "$";
-            }
-            else
-            {
-                sumFoodLbl.Text = "";
-                sumFood = 0;
+                if(item is Label lB)
+                {
+                    lB.ForeColor= Color.Green;
+                    lB.Font = new Font("Times New Roman", 48);
+                    lB.Location=new Point(lB.Location.X-300, lB.Location.Y-10);    
+                    lB.Text = total_price.ToString() + "$";
+                }
             }
         }
     }
